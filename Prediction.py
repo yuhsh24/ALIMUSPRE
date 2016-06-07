@@ -22,6 +22,22 @@ def LinearPrediction(train_X, train_y, predict_x):
         prediction_y.append(max(0, int(initial_y[i])))
     return prediction_y
 
+#写入预测的结果
+def WriteResult(artistID, predict_file_path, prediction_y):
+    headers = ["ID", "Play", "Date"]
+    with open(predict_file_path, "a") as f:
+        f_csv = csv.DictWriter(f, headers)
+        for i in range(1, 61):
+            unixTime = START_UNIX+(DAYS+i)*DAY_SECOND
+            date = Unix2Date(unixTime)
+            f_csv.writerows([{headers[0]: artistID, headers[1]: prediction_y[i], headers[2]: date}])
+
+#实现unix时间转换为如20150901的日期
+def Unix2Date(unixTime):
+    dt = time.localtime(unixTime)
+    date = time.strftime("%Y%m%d", dt)
+    return date
+
 if __name__ == "__main__":
     headers1 = ["ID", "Play", "Date"]
     with open(ARTIST_P_D_C) as fr:
@@ -38,13 +54,5 @@ if __name__ == "__main__":
                 predict_x.append([days+183, 1])
             prediction_y = LinearPrediction(x, play, predict_x)#预测
             predict_file_path = os.path.join(CURRENT_PATH, "mars_tianchi_predict_data.csv")
-
-            with open(predict_file_path, 'a') as f:
-                f_csv = csv.DictWriter(f, headers1)
-                for days in range(1, 61):
-                    day = START_UNIX+(183+days)*DAY_SECOND
-                    format = "%Y%m%d"
-                    day = time.localtime(day)
-                    dt = time.strftime(format, day)
-                    f_csv.writerows([{headers1[0]: artistID, headers1[1]: prediction_y[days], headers1[2]: dt}])
+            WriteResult(artistID, predict_file_path, prediction_y)
             artistID = fr.readline().strip("\n")

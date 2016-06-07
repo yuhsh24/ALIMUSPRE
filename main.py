@@ -226,11 +226,13 @@ class Artist(object):
 if __name__ == "__main__":
     #IfNoSongTXT()
     #IfNoArtistTXT()
+    '''
     a = Artist("0c80008b0a28d356026f4b1097041689")
     a.PlotArtistPlay()
     a.PlotArtistFan()
     a.PlotSongPlay()
     a.PlotSongFan()
+    '''
 
 
 
