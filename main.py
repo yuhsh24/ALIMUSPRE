@@ -14,8 +14,8 @@ sys.path.append(parent_path)
 
 CURRENT_PATH = sys.path[0]#获取当前的路径
 ARTIST_FOLDER = os.path.join(CURRENT_PATH,'pic','artist')
-ARTIST = os.path.join(CURRENT_PATH, "mars_tianchi_songs.csv")#该文件记录了每首歌对应的艺人
-SONGS = os.path.join(CURRENT_PATH, "mars_tianchi_user_actions.csv")#该文件记录了每个用户对不同歌曲的操作
+ARTIST = os.path.join(CURRENT_PATH, "p2_mars_tianchi_songs.csv")#该文件记录了每首歌对应的艺人
+SONGS = os.path.join(CURRENT_PATH, "p2_mars_tianchi_user_actions.csv")#该文件记录了每个用户对不同歌曲的操作
 SONG_P_D_C = os.path.join(CURRENT_PATH, "song_p_d_c.txt")#记录每首歌每日的播放量,下载量以及收藏量的数目
 ARTIST_P_D_C = os.path.join(CURRENT_PATH, "artist_p_d_c.txt")#记录每天该艺人的播放量,下载量以及收藏量的数目
 SONG_FAN = os.path.join(CURRENT_PATH, "song_fan.txt")#记录每天听对应歌曲的不同用户数目
