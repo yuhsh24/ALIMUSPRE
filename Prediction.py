@@ -82,9 +82,14 @@ def CalculateF1Score(realPlayData, predictPlayData):
         F1Score += (1-sigma)*theta
     return F1Score
 
+def Unix2Day(unixTime):
+    dt = time.localtime(unixTime)
+    date = time.strftime("%d", dt)
+    return date
+
 def MakeFeature(day):
-    #feature = [day]
     feature = []
+    #feature.append(day)
     #日期特征
     weekDay = Num2WeekDay(day)
     for i in range(1, 8):
@@ -92,16 +97,31 @@ def MakeFeature(day):
             feature.append(1)
         else:
             feature.append(0)
+    '''
+    unixTime = START_UNIX+day*DAY_SECOND
+    day = Unix2Day(unixTime)
+    day = int(day)
+    if day <= 10:
+        feature.append(1)
+        feature.append(0)
+        feature.append(0)
+    elif day <= 20:
+        feature.append(0)
+        feature.append(1)
+        feature.append(0)
+    else:
+        feature.append(0)
+        feature.append(0)
+        feature.append(1)
+    '''
+    '''
     #是否法定假日
     unixTime = START_UNIX+day*DAY_SECOND
     date = Unix2Date(unixTime)
-    '''
     if date in HOLIDAY:
         feature.append(1)
     else:
         feature.append(0)
-    '''
-    '''
     #是否放假
     if date in HOLIDAY:
         feature.append(1)
@@ -130,18 +150,17 @@ if __name__ == "__main__":
             x = [MakeFeature(i) for i in range(183)]
             x = np.array(x)
 
-            train_x = x[:-60]
-            train_y = play[:-60]
+            train_x = x[-120:-60]
+            train_y = play[-120:-60]
             test_x = x[-60:]
             test_y = play[-60:]
             predict_y = LinearPrediction(train_x, train_y, test_x)
             #predict_y = RandomForestPrediction(train_x, train_y, test_x)
             realPlayData.append(test_y)
             predictPlayData.append(predict_y)
-
             '''
-            train_x = x[61:]
-            train_y = play[61:]
+            train_x = x[120:]
+            train_y = play[120:]
             predict_x = []
             for days in range(61):
                 predict_x.append(MakeFeature(days+183))
