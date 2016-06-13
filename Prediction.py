@@ -51,6 +51,13 @@ def WriteResult(artistID, predict_file_path, prediction_y):
             date = Unix2Date(unixTime)
             f_csv.writerows([{headers[0]: artistID, headers[1]: prediction_y[i], headers[2]: date}])
 
+def WriteF1Score(file_path, Score):
+    headers = ["SCORE"]
+    with open(file_path, "a") as f:
+        f_csv = csv.DictWriter(f, headers)
+        for score in Score:
+           f_csv.writerows([{headers[0]: score}])
+
 #实现unix时间转换为如20150901的日期
 def Unix2Date(unixTime):
     dt = time.localtime(unixTime)
@@ -136,12 +143,28 @@ def MakeFeature(day):
     #feature.append(weekDay)
     return feature
 
+def CalculateF1ScorePer(realPlayData, predictPlayData):
+    F1Score = 0
+    for i in range(len(realPlayData)):
+        sigma = 0
+        theta = 0
+        if realPlayData[i] == 0:
+            continue
+        sigma += ((predictPlayData[i]-realPlayData[i])/realPlayData[i])**2
+        theta += realPlayData[i]
+        sigma = math.sqrt(sigma/len(realPlayData))
+        theta = math.sqrt(theta)
+        F1Score += (1-sigma)*theta
+    return 1-sigma
+
 if __name__ == "__main__":
     headers1 = ["ID", "Play", "Date"]
     with open(ARTIST_P_D_C) as fr:
         realPlayData = []
         predictPlayData = []
         artistID = fr.readline().strip("\n")
+        mean_F1Score = []
+        linear_F1Score = []
         while artistID:
             play = list(map(int, fr.readline().strip("\n").split(",")))
             download = list(map(int, fr.readline().strip("\n").split(",")))
@@ -149,24 +172,86 @@ if __name__ == "__main__":
             play = np.array(play)
             x = [MakeFeature(i) for i in range(183)]
             x = np.array(x)
-
+            '''
+            #使用3,4月份预测5,6月份
+            train_x = x[0:61]
+            train_y = play[0:61]
+            test_x = x[61:122]
+            test_y = play[61:122]
+            mean_y = int(np.mean(train_y[len(train_y)-5:len(train_y)]))
+            mean_predict_y = []
+            for i in range(len(test_x)):
+                mean_predict_y.append(mean_y)
+            linear_predict_y = LinearPrediction(train_x, train_y, test_x)
+            mean_predict_F1Score = CalculateF1ScorePer(test_y, mean_predict_y)
+            linear_predict_F1Score = CalculateF1ScorePer(test_y, linear_predict_y)
+            #使用5,6月份预测7,8月份
             train_x = x[-120:-60]
             train_y = play[-120:-60]
             test_x = x[-60:]
             test_y = play[-60:]
-            predict_y = LinearPrediction(train_x, train_y, test_x)
+            mean_y = int(np.mean(train_y[len(train_y)-5:len(train_y)]))
+            mean_predict_y = []
+            for i in range(len(test_x)):
+                mean_predict_y.append(mean_y)
+            linear_predict_y = LinearPrediction(train_x, train_y, test_x)
+
+            predict_y = []
+            for i in range(len(mean_predict_y)):
+                if mean_predict_F1Score > linear_predict_F1Score:
+                    predict_y.append(mean_predict_y[i])
+                else:
+                    predict_y.append(linear_predict_y[i])
             #predict_y = RandomForestPrediction(train_x, train_y, test_x)
             realPlayData.append(test_y)
             predictPlayData.append(predict_y)
             '''
-            train_x = x[120:]
-            train_y = play[120:]
+            #使用5,6月份预测7,8月份
+            train_x = x[61:122]
+            train_y = play[61:122]
+            test_x = x[122:183]
+            test_y = play[122:183]
+            mean_y = int(np.mean(train_y[len(train_y)-3:len(train_y)]))
+            mean_predict_y = []
+            for i in range(len(test_x)):
+                mean_predict_y.append(mean_y)
+            linear_predict_y = LinearPrediction(train_x, train_y, test_x)
+            mean_predict_F1Score = CalculateF1ScorePer(test_y, mean_predict_y)
+            linear_predict_F1Score = CalculateF1ScorePer(test_y, linear_predict_y)
+            mean_F1Score.append(mean_predict_F1Score)
+            linear_F1Score.append(linear_predict_F1Score)
+            #使用7,8月份预测9,10月份
+            train_x = x[122:183]
+            train_y = play[122:183]
             predict_x = []
             for days in range(61):
                 predict_x.append(MakeFeature(days+183))
-            prediction_y = LinearPrediction(train_x, train_y, predict_x)#预测
+            mean_y = int(np.mean(train_y[len(train_y)-7:len(train_y)]))
+            mean_predict_y = []
+            for i in range(len(predict_x)):
+                mean_predict_y.append(mean_y)
+            linear_predict_y = LinearPrediction(train_x, train_y, predict_x)#预测
+            prediction_y = []
+            for i in range(len(mean_predict_y)):
+                if math.fabs((linear_predict_y[i]-mean_predict_y[i])) > 0.025*mean_predict_y[i]:
+                    prediction_y.append(mean_predict_y[i])
+                else:
+                    prediction_y.append(linear_predict_y[i])
+                '''
+                if mean_predict_F1Score > linear_predict_F1Score:
+                    prediction_y.append(mean_predict_y[i])
+                else:
+                    prediction_y.append(linear_predict_y[i])
+                '''
             predict_file_path = os.path.join(CURRENT_PATH, "mars_tianchi_predict_data.csv")
             WriteResult(artistID, predict_file_path, prediction_y)
-            '''
             artistID = fr.readline().strip("\n")
         print(CalculateF1Score(realPlayData, predictPlayData))
+        print(mean_F1Score)
+        print(linear_F1Score)
+        '''
+        print(ARTIST_F1SCORE)
+        file_path = os.path.join(CURRENT_PATH, "linear_score.csv")
+        WriteF1Score(file_path, ARTIST_F1SCORE)
+        '''
+
